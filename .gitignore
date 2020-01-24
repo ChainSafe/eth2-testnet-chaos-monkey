@@ -65,4 +65,4 @@ lib
 .DS_Store
 
 # Hide keys
-./keys
+keys

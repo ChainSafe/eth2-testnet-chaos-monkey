@@ -2,16 +2,13 @@ require("dotenv").config();
 import fs from "fs";
 import { utils, Wallet, ethers } from "ethers";
 
-const defaultMnemonic = process.env.defaultMnemonic;
-const masterKey = process.env.masterKey;
-
 interface IGoerliKeys {
     address: string;
     privkey: string;
 }
 
 function generateKeys(numKeys: number, mnemonic?: string): IGoerliKeys[] {
-    const masterNode = utils.HDNode.fromMnemonic(mnemonic || defaultMnemonic);
+    const masterNode = utils.HDNode.fromMnemonic(mnemonic || process.env.defaultMnemonic);
     const arr = new Array(numKeys);
     const base = masterNode.derivePath(`m/44'/60'/0'`);
     return arr
@@ -32,7 +29,7 @@ function createGoerliJsonFile(keys: IGoerliKeys[]): void {
 
 async function distribute(keys: IGoerliKeys[]): Promise<void> {
     const provider = ethers.getDefaultProvider("goerli");
-    const masterWallet = new Wallet(masterKey, provider);
+    const masterWallet = new Wallet(process.env.masterKey, provider);
     
     keys.forEach(async (key: IGoerliKeys) => {
         let code = await provider.getCode(key.address);
