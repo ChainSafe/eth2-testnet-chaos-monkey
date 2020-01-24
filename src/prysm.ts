@@ -29,14 +29,20 @@ function generateKeys(numKeys: number, startingPoint: number, mnemonic?: string)
 }
 
 function createPrysmJsonFile(eth2keys: IEth2ValidatorKeys[]): void {
-    const keys = eth2keys.map((k) => {
+    let keys = eth2keys.map((k) => {
         return {validator_key: k.signing.toString("base64")};
     });
-    const data = JSON.stringify({ keys });
-    fs.writeFileSync(`./keys/prysm/${Date.now()}.json`, data);
+    let data = JSON.stringify({ keys });
+    fs.writeFileSync(`./keys/prysm/signing-${Date.now()}.json`, data);
+
+    keys = eth2keys.map((k) => {
+        return { validator_key: k.withdrawal.toString("base64") };
+    });
+    data = JSON.stringify({ keys });
+    fs.writeFileSync(`./keys/prysm/withdrawal-${Date.now()}.json`, data);
 }
 
 (async function main(): Promise<void> {
-    const keys = generateKeys(2, 0);
+    const keys = generateKeys(Number(process.argv[2]), 0);
     createPrysmJsonFile(keys);
 })();

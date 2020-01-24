@@ -95,7 +95,7 @@ async function sweep(to: string, keys: IGoerliKeys[]): Promise<void> {
 }
 
 (async function main() {
-    const keys = generateKeys(1);
+    const keys = generateKeys(Number(process.argv[2]));
     // sweep(process.env.masterPub, keys);
-    // createGoerliJsonFile(keys);
+    createGoerliJsonFile(keys);
 })();
