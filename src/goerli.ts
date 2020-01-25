@@ -30,8 +30,9 @@ function createGoerliJsonFile(keys: IGoerliKeys[]): void {
 async function distribute(keys: IGoerliKeys[]): Promise<void> {
     const provider = ethers.getDefaultProvider("goerli");
     const masterWallet = new Wallet(process.env.masterKey, provider);
-    
-    keys.forEach(async (key: IGoerliKeys) => {
+    let baseNonce = await masterWallet.getTransactionCount();
+
+    keys.forEach(async (key: IGoerliKeys, i: number) => {
         let code = await provider.getCode(key.address);
         if (code !== '0x') { 
             // throw new Error('Cannot sweep to a contract'); 
@@ -45,15 +46,22 @@ async function distribute(keys: IGoerliKeys[]): Promise<void> {
 
         // The exact cost (in gas) to send to an Externally Owned Account (EOA)
         let gasLimit = 21000;
+        let value = utils.parseEther("32.0");
 
-        let tx = await masterWallet.sendTransaction({
-            gasLimit: gasLimit,
-            gasPrice: gasPrice,
-            to: key.address,
-            value: utils.parseEther("32.0")
-        });
-        console.log('Sent in Transaction: ' + tx.hash);
-        console.log('Sent 32 goerli eth to: ', key.address);
+        try {
+            let tx = await masterWallet.sendTransaction({
+                gasLimit: gasLimit,
+                gasPrice: gasPrice,
+                to: key.address,
+                value,
+                nonce: baseNonce + i
+            });
+
+            console.log('Sent in Transaction: ' + tx.hash);
+            console.log('Sent 32 goerli eth to: ', key.address);
+        } catch (e) {
+            console.log("Error distributing eth:", e)
+        }
     })
 }
 
@@ -82,20 +90,24 @@ async function sweep(to: string, keys: IGoerliKeys[]): Promise<void> {
 
         // The balance less exactly the txfee in wei
         let value = balance.sub(gasPrice.mul(gasLimit))
-
-        let tx = await wallet.sendTransaction({
-            gasLimit: gasLimit,
-            gasPrice: gasPrice,
-            to,
-            value: value
-        });
-        console.log('Sent in Transaction: ' + tx.hash);
-        console.log(`Swept ${value} goerli eth to: `, to);
+        try {
+            let tx = await wallet.sendTransaction({
+                gasLimit: gasLimit,
+                gasPrice: gasPrice,
+                to,
+                value: value
+            });
+            console.log('Sent in Transaction: ' + tx.hash);
+            console.log(`Swept ${value} goerli eth to: `, to);
+        } catch (e) {
+            console.log(e);
+        }
     })
 }
 
 (async function main() {
     const keys = generateKeys(Number(process.argv[2]));
-    // sweep(process.env.masterPub, keys);
-    createGoerliJsonFile(keys);
+    // await distribute(keys);
+    await sweep(process.env.masterPub, keys);
+    // createGoerliJsonFile(keys);
 })();
