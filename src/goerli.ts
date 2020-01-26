@@ -31,7 +31,9 @@ async function distribute(keys: IGoerliKeys[]): Promise<void> {
     const provider = ethers.getDefaultProvider("goerli");
     const masterWallet = new Wallet(process.env.masterKey, provider);
     let baseNonce = await masterWallet.getTransactionCount();
-
+    
+    const failed: IGoerliKeys[] = [];
+    
     keys.forEach(async (key: IGoerliKeys, i: number) => {
         let code = await provider.getCode(key.address);
         if (code !== '0x') { 
@@ -60,14 +62,22 @@ async function distribute(keys: IGoerliKeys[]): Promise<void> {
             console.log('Sent in Transaction: ' + tx.hash);
             console.log('Sent 32 goerli eth to: ', key.address);
         } catch (e) {
+            failed.push(key);
             console.log("Error distributing eth:", e)
         }
     })
+    if (failed.length > 0) {
+        const data = JSON.stringify({ keys: failed });
+        fs.writeFileSync(`./keys/failed/distribute-${Date.now()}.json`, data);
+    }
 }
 
 async function sweep(to: string, keys: IGoerliKeys[]): Promise<void> {
     const provider = ethers.getDefaultProvider("goerli");
     
+    // Keep track of failed txs
+    const failed: IGoerliKeys[] = [];
+
     keys.forEach(async (key: IGoerliKeys) => {
         const wallet = new Wallet(key.privkey, provider);
         
@@ -100,9 +110,14 @@ async function sweep(to: string, keys: IGoerliKeys[]): Promise<void> {
             console.log('Sent in Transaction: ' + tx.hash);
             console.log(`Swept ${value} goerli eth to: `, to);
         } catch (e) {
+            failed.push(key)
             console.log(e);
         }
     })
+    if (failed.length > 0) {
+        const data = JSON.stringify({ keys: failed });
+        fs.writeFileSync(`./keys/failed/sweep-${Date.now()}.json`, data);
+    }
 }
 
 (async function main() {
