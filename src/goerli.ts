@@ -123,6 +123,6 @@ async function sweep(to: string, keys: IGoerliKeys[]): Promise<void> {
 (async function main() {
     const keys = generateKeys(Number(process.argv[2]));
     // await distribute(keys);
-    await sweep(process.env.masterPub, keys);
-    // createGoerliJsonFile(keys);
+    // await sweep(process.env.masterPub, keys);
+    createGoerliJsonFile(keys);
 })();

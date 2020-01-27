@@ -10,7 +10,7 @@ import {
 } from "@chainsafe/bls-keygen";
 import { SigningKey } from "ethers/utils";
 
-interface IPrysmKeyFormat {
+export interface IPrysmKeyFormat {
     validator_key: string;
 }
 
@@ -44,5 +44,6 @@ function createPrysmJsonFile(eth2keys: IEth2ValidatorKeys[]): void {
 
 (async function main(): Promise<void> {
     const keys = generateKeys(Number(process.argv[2]), 0);
-    createPrysmJsonFile(keys);
+    console.log(keys[0].signing.toString("hex"));
+    // createPrysmJsonFile(keys);
 })();
